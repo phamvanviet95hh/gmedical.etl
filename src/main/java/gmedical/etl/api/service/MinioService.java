@@ -10,11 +10,17 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.w3c.dom.Document;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @Log4j2
@@ -141,13 +147,77 @@ public class MinioService {
         try {
             var builder = GetObjectArgs.builder()
                     .bucket(bucketName)
-                    .object(fullFilePath).build();
+                    .object(fullFilePath)
+                    .build();
             InputStream object = this.minioClient().getObject(builder);
+            byte[] xmlBytes = toByteArray(object);
+
+            String xmlContent = new String(xmlBytes, StandardCharsets.UTF_8);
+            System.out.println("XML content:\n" + xmlContent);
+
+            InputStream xmlInputStreamForParsing = new ByteArrayInputStream(xmlBytes);
+
+            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+            DocumentBuilder buildera = factory.newDocumentBuilder();
+            Document document = buildera.parse(xmlInputStreamForParsing);
+
+            document.getDocumentElement().normalize();
+            System.out.println("Root element: " + document.getDocumentElement().getNodeName());
             log.info("download file: {}", fullFilePath);
+            // ✅ Tạo thư mục đích nếu chưa tồn tại
+            String folderPath = "C:\\gmedical\\data\\";
+            Files.createDirectories(Paths.get(folderPath));
+
+            // ✅ Tên file từ object path
+            String fileName = Paths.get(fullFilePath).getFileName().toString();
+
+            // ✅ Đường dẫn đầy đủ để lưu file
+            String destinationPath = folderPath + fileName;
+
+            // ✅ Lưu stream vào file đích
+            Files.copy(object, Paths.get(destinationPath), StandardCopyOption.REPLACE_EXISTING);
+
+            System.out.println("✅ File đã được tải và lưu tại: " + destinationPath);
+
+
+            System.out.println("content : " + object);
             return object;
         } catch (Exception e) {
             throw new Exception("Error occurred: " + e);
         }
+    }
+    public static byte[] toByteArray(InputStream input) throws IOException {
+        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
+        byte[] data = new byte[1024];
+        int nRead;
+        while ((nRead = input.read(data, 0, data.length)) != -1) {
+            buffer.write(data, 0, nRead);
+        }
+        return buffer.toByteArray();
+    }
+
+    public void readXmlContent(InputStream xmlInputStream) throws Exception {
+
+        // Kiểm tra stream có dữ liệu không
+        if (xmlInputStream.available() == 0) {
+            System.out.println("InputStream rỗng, không có dữ liệu.");
+            return;
+        }
+
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        DocumentBuilder builder = factory.newDocumentBuilder();
+        Document document = builder.parse(xmlInputStream);
+
+        document.getDocumentElement().normalize();
+
+        System.out.println("Root element: " + document.getDocumentElement().getNodeName());
+
+        // Ví dụ: lấy giá trị của thẻ <exampleTag>
+        String exampleValue = document.getElementsByTagName("exampleTag")
+                .item(0)
+                .getTextContent();
+
+        System.out.println("Value of exampleTag: " + exampleValue);
     }
     public boolean doesObjectExist(String objectName) {
         try {
