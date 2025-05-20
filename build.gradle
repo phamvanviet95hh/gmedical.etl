@@ -38,6 +38,9 @@ dependencies {
     // https://mvnrepository.com/artifact/javax.xml.parsers/jaxp-api
     implementation("javax.xml.parsers:jaxp-api:1.4.5")
 
+    // https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-xml
+    implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.19.0")
+
     // Iceberg (dùng core hoặc Spark integration nếu cần)
     implementation 'org.apache.iceberg:iceberg-core:1.5.0'
     implementation 'org.apache.iceberg:iceberg-parquet:1.5.0'
