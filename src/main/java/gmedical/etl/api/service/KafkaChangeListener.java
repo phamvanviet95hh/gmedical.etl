@@ -1,15 +1,9 @@
 package gmedical.etl.api.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import gmedical.etl.api.model.MyDataModel;
-import org.json.JSONException;
+
 import org.json.JSONObject;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
-
-import java.io.InputStream;
-import java.util.List;
 
 @Service
 public class KafkaChangeListener {

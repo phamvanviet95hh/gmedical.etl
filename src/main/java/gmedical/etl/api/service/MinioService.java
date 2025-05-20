@@ -11,6 +11,8 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.NodeList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -161,7 +163,38 @@ public class MinioService {
             DocumentBuilder buildera = factory.newDocumentBuilder();
             Document document = buildera.parse(xmlInputStreamForParsing);
 
-            document.getDocumentElement().normalize();
+            NodeList fileHosoList = document.getElementsByTagName("FILEHOSO");
+
+            for (int i = 0; i < fileHosoList.getLength(); i++) {
+                Element fileHoso = (Element) fileHosoList.item(i);
+                String loaiHoso = fileHoso.getElementsByTagName("LOAIHOSO").item(0).getTextContent();
+                String encodedContent = fileHoso.getElementsByTagName("NOIDUNGFILE").item(0).getTextContent();
+
+                // 2. Giải mã Base64
+                byte[] decodedBytes = Base64.getDecoder().decode(encodedContent);
+                String innerXml = new String(decodedBytes, StandardCharsets.UTF_8);
+                System.out.println("== Loai Ho So: " + loaiHoso + " ==");
+                System.out.println(innerXml);
+
+                // 3. Nếu muốn parse inner XML tiếp:
+                Document innerDoc = buildera.parse(new ByteArrayInputStream(innerXml.getBytes(StandardCharsets.UTF_8)));
+                // ví dụ: lấy thông tin từ thẻ MA_LK trong inner XML
+                NodeList maLkNodes = innerDoc.getElementsByTagName("MA_LK");
+                if (maLkNodes.getLength() > 0) {
+                    String maLk = maLkNodes.item(0).getTextContent();
+                    System.out.println("MA_LK: " + maLk);
+                }
+
+                // Tùy ý xử lý innerDoc...
+            }
+
+
+
+
+
+
+
+
             System.out.println("Root element: " + document.getDocumentElement().getNodeName());
             log.info("download file: {}", fullFilePath);
             // ✅ Tạo thư mục đích nếu chưa tồn tại
