@@ -30,24 +30,6 @@ public class KafkaChangeListener {
 
     private final MinioService minioService;
 
-    private Xml1 xml1 = null;
-    private Xml2 xml2 = null;
-    private Xml3 xml3 = null;
-    private Xml4 xml4 = null;
-    private Xml5 xml5 = null;
-    private Xml6 xml6 = null;
-    private Xml7 xml7 = null;
-    private Xml8 xml8 = null;
-    private Xml9 xml9 = null;
-    private Xml10 xml10 = null;
-    private Xml11 xml11 = null;
-    private Xml12 xml12 = null;
-    private Xml13 xml13 = null;
-    private Xml14 xml14 = null;
-    private Xml15 xml15 = null;
-
-
-
 
     public KafkaChangeListener(MinioService minioService) {
         this.minioService = minioService;
