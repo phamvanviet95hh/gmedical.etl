@@ -152,76 +152,13 @@ public class MinioService {
                     .object(fullFilePath)
                     .build();
             InputStream object = this.minioClient().getObject(builder);
-            byte[] xmlBytes = toByteArray(object);
-
-            String xmlContent = new String(xmlBytes, StandardCharsets.UTF_8);
-            System.out.println("XML content:\n" + xmlContent);
-
-            InputStream xmlInputStreamForParsing = new ByteArrayInputStream(xmlBytes);
-
-            DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-            DocumentBuilder buildera = factory.newDocumentBuilder();
-            Document document = buildera.parse(xmlInputStreamForParsing);
-
-            NodeList fileHosoList = document.getElementsByTagName("FILEHOSO");
-
-            for (int i = 0; i < fileHosoList.getLength(); i++) {
-                Element fileHoso = (Element) fileHosoList.item(i);
-                String loaiHoso = fileHoso.getElementsByTagName("LOAIHOSO").item(0).getTextContent();
-                String encodedContent = fileHoso.getElementsByTagName("NOIDUNGFILE").item(0).getTextContent();
-
-                // 2. Giải mã Base64
-                byte[] decodedBytes = Base64.getDecoder().decode(encodedContent);
-                String innerXml = new String(decodedBytes, StandardCharsets.UTF_8);
-                System.out.println("== Loai Ho So: " + loaiHoso + " ==");
-                System.out.println(innerXml);
-
-                // 3. Nếu muốn parse inner XML tiếp:
-                Document innerDoc = buildera.parse(new ByteArrayInputStream(innerXml.getBytes(StandardCharsets.UTF_8)));
-                // ví dụ: lấy thông tin từ thẻ MA_LK trong inner XML
-                NodeList maLkNodes = innerDoc.getElementsByTagName("MA_LK");
-                if (maLkNodes.getLength() > 0) {
-                    String maLk = maLkNodes.item(0).getTextContent();
-                    System.out.println("MA_LK: " + maLk);
-                }
-
-                // Tùy ý xử lý innerDoc...
-            }
-
-
-            System.out.println("Root element: " + document.getDocumentElement().getNodeName());
-            log.info("download file: {}", fullFilePath);
-            // ✅ Tạo thư mục đích nếu chưa tồn tại
-            String folderPath = "C:\\gmedical\\data\\";
-            Files.createDirectories(Paths.get(folderPath));
-
-            // ✅ Tên file từ object path
-            String fileName = Paths.get(fullFilePath).getFileName().toString();
-
-            // ✅ Đường dẫn đầy đủ để lưu file
-            String destinationPath = folderPath + fileName;
-
-            // ✅ Lưu stream vào file đích
-            Files.copy(object, Paths.get(destinationPath), StandardCopyOption.REPLACE_EXISTING);
-
-            System.out.println("✅ File đã được tải và lưu tại: " + destinationPath);
-
-
-            System.out.println("content : " + object);
+            log.info("✅ download file: {}", fullFilePath);
             return object;
         } catch (Exception e) {
             throw new Exception("Error occurred: " + e);
         }
     }
-    public static byte[] toByteArray(InputStream input) throws IOException {
-        ByteArrayOutputStream buffer = new ByteArrayOutputStream();
-        byte[] data = new byte[1024];
-        int nRead;
-        while ((nRead = input.read(data, 0, data.length)) != -1) {
-            buffer.write(data, 0, nRead);
-        }
-        return buffer.toByteArray();
-    }
+
 
     public void readXmlContent(InputStream xmlInputStream) throws Exception {
 
