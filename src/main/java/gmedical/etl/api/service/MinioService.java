@@ -189,12 +189,6 @@ public class MinioService {
             }
 
 
-
-
-
-
-
-
             System.out.println("Root element: " + document.getDocumentElement().getNodeName());
             log.info("download file: {}", fullFilePath);
             // ✅ Tạo thư mục đích nếu chưa tồn tại
