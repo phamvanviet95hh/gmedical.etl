@@ -17,6 +17,12 @@ configurations {
     compileOnly {
         extendsFrom annotationProcessor
     }
+
+}
+configurations {
+    all {
+        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j2-impl'
+    }
 }
 
 repositories {
@@ -24,13 +30,28 @@ repositories {
 }
 
 dependencies {
-
-    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.kafka:spring-kafka'
     implementation 'io.minio:minio:8.5.5'
 
     // https://mvnrepository.com/artifact/org.json/json
     implementation("org.json:json:20090211")
+
+    // Spark core + SQL
+    implementation 'org.apache.spark:spark-sql_2.12:3.4.1'
+
+
+
+    // https://mvnrepository.com/artifact/org.apache.iceberg/iceberg-spark-runtime-3.4
+    implementation("org.apache.iceberg:iceberg-spark-runtime-3.4_2.13:1.9.0")
+    // Iceberg hỗ trợ AWS S3
+    implementation "org.apache.iceberg:iceberg-aws:1.2.0"
+
+    // AWS SDK v2 (đảm bảo có đủ các thư viện cần thiết)
+    implementation 'software.amazon.awssdk:s3:2.31.50'
+    implementation "software.amazon.awssdk:auth:2.31.50"
+    implementation "software.amazon.awssdk:core:2.31.50"
+
 
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
     implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.2'
@@ -45,14 +66,26 @@ dependencies {
     implementation 'org.apache.iceberg:iceberg-core:1.5.0'
     implementation 'org.apache.iceberg:iceberg-parquet:1.5.0'
 
+
+    implementation 'javax.servlet:javax.servlet-api:4.0.1'
+
+
+
     // Chuyển đổi dữ liệu
     implementation 'com.fasterxml.jackson.core:jackson-databind'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+}
+
+
+bootRun {
+    jvmArgs = [
+            "--add-exports=java.base/sun.nio.ch=ALL-UNNAMED"
+    ]
 }
 
 tasks.named('test') {

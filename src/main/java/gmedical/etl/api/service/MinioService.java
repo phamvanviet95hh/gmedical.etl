@@ -25,7 +25,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
-@Log4j2
 public class MinioService {
 
     @Value("${minio.endpoint}")
@@ -81,7 +80,7 @@ public class MinioService {
                                 .contentType(file.getContentType())
                                 .build());
             }
-            log.info("save file {} onto: {}", file.getOriginalFilename(), fileName);
+
             return fileName;
         } catch (MinioException e) {
             throw new Exception("Error occurred: " + e);
@@ -105,7 +104,7 @@ public class MinioService {
                                 .contentType(contentType)
                                 .build());
             }
-            log.info("save file: {}", fullFilePath);
+
             return fullFilePath;
         } catch (MinioException e) {
             throw new Exception("Error occurred: " + e);
@@ -131,7 +130,7 @@ public class MinioService {
                                 .contentType(MediaType.APPLICATION_XML_VALUE)
                                 .build());
             }
-            log.info("save file: {}", fileName);
+
         } catch (MinioException e) {
             throw new Exception("Error occurred: " + e);
         }
@@ -152,7 +151,7 @@ public class MinioService {
                     .object(fullFilePath)
                     .build();
             InputStream object = this.minioClient().getObject(builder);
-            log.info("✅ download file: {}", fullFilePath);
+
             return object;
         } catch (Exception e) {
             throw new Exception("Error occurred: " + e);
@@ -234,7 +233,7 @@ public class MinioService {
                             .object(targetObjectName)
                             .build());
 
-            log.info("File copied successfully.");
+
         } catch (Exception e) {
             throw new MinioException("Error occurred: " + e.getMessage());
         }

@@ -25,7 +25,6 @@ import java.util.Base64;
 import java.util.Map;
 
 @Service
-@Log4j2
 public class KafkaChangeListener {
 
     private final MinioService minioService;
@@ -38,13 +37,11 @@ public class KafkaChangeListener {
 
     @KafkaListener(topics = "minio-topic", groupId = "gmedical")
     public void listen(String message) throws Exception {
-        log.info("Received Kafka message: {}" , message);
-        JSONObject json = new JSONObject(message);
 
+        JSONObject json = new JSONObject(message);
 
         // ✅ Lấy key từ JSON root level
         String key = json.getString("Key"); // Đây là dạng không encode
-        log.info("🔑 Key gốc: {}" , key);
         // Tách bỏ tên bucket khỏi key nếu cần
         String objectPath = key.replace("gmedical.lake/", "");
         InputStream fileData =  minioService.downloadFile(objectPath);
@@ -93,21 +90,20 @@ public class KafkaChangeListener {
 
             byte[] decodedBytes = Base64.getDecoder().decode(encodedContent);
             String innerXml = new String(decodedBytes, StandardCharsets.UTF_8);
-            log.info("== Loại Hồ Sơ: {}" , loaiHoso);
+
 
             Class<?> clazz = xmlClassMap.getOrDefault(loaiHoso, Xml1.class);
             Object xmlObj = xmlMapper.readValue(innerXml, clazz);
 
             // Xử lý từng loại
             if (xmlObj instanceof Xml1 xml1) {
-                log.info("Mã liên kết : {}",xml1.getMaLk());
+
             } else if (xmlObj instanceof Xml2 xml2) {
-                log.info("Số lượng đơn thuốc: {}" , xml2.getDanhSachChiTietThuoc().getChiTietThuoc().size());
+
             }
 
         }
 
-        log.info("Root element: {}" , document.getDocumentElement().getNodeName());
     }
 
     public static byte[] toByteArray(InputStream input) throws IOException {
