@@ -5,11 +5,11 @@ import org.apache.iceberg.*;
 import org.apache.iceberg.catalog.TableIdentifier;
 import org.apache.iceberg.data.GenericRecord;
 import org.apache.iceberg.data.Record;
-import org.apache.iceberg.data.parquet.GenericParquetWriter;
+//import org.apache.iceberg.data.parquet.GenericParquetWriter;
 import org.apache.iceberg.hadoop.HadoopCatalog;
 import org.apache.iceberg.io.FileAppender;
 import org.apache.iceberg.io.OutputFile;
-import org.apache.iceberg.parquet.Parquet;
+//import org.apache.iceberg.parquet.Parquet;
 import org.apache.iceberg.types.Types;
 import org.springframework.stereotype.Service;
 
@@ -52,10 +52,6 @@ public class IcebergService {
             System.out.println("Bảng đã tồn tại...");
         }
 
-
-
-
-
         // 5. Ghi 1 bản ghi mẫu để sinh metadata
         Record record = GenericRecord.create(table.schema());
         record.setField("id", 1);
@@ -66,14 +62,14 @@ public class IcebergService {
         // 6. Tạo file output để ghi dữ liệu
         OutputFile outFile = table.io().newOutputFile(table.location() + "/data/sample.parquet");
 
-        try (FileAppender<Record> writer = Parquet.write(outFile)
-                .schema(table.schema())
-                .createWriterFunc(GenericParquetWriter::buildWriter)
-                .build()) {
-            writer.add(record);
-
-            System.out.println("Đã thực hiện ghi ");
-        }
+//        try (FileAppender<Record> writer = Parquet.write(outFile)
+//                .schema(table.schema())
+//                .createWriterFunc(GenericParquetWriter::buildWriter)
+//                .build()) {
+//            writer.add(record);
+//
+//            System.out.println("Đã thực hiện ghi ");
+//        }
 
         // 7. Commit dữ liệu vào Iceberg
         DataFile dataFile = DataFiles.builder(table.spec())
@@ -98,12 +94,12 @@ public class IcebergService {
             File file = File.createTempFile("iceberg-data-", ".parquet");
             file.deleteOnExit();
 
-            try (FileAppender<Record> writer = Parquet.write(Files.localOutput(file))
-                    .schema(schema)
-                    .createWriterFunc(GenericParquetWriter::buildWriter)
-                    .build()) {
-                writer.add(record);
-            }
+//            try (FileAppender<Record> writer = Parquet.write(Files.localOutput(file))
+//                    .schema(schema)
+//                    .createWriterFunc(GenericParquetWriter::buildWriter)
+//                    .build()) {
+//                writer.add(record);
+//            }
 
             return file;
         } catch (Exception e) {

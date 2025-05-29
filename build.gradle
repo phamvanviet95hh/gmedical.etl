@@ -19,10 +19,8 @@ configurations {
     }
 
 }
-configurations {
-    all {
-        exclude group: 'org.apache.logging.log4j', module: 'log4j-slf4j2-impl'
-    }
+configurations.all {
+    exclude group: "org.slf4j", module: "slf4j-reload4j"
 }
 
 repositories {
@@ -37,21 +35,61 @@ dependencies {
     // https://mvnrepository.com/artifact/org.json/json
     implementation("org.json:json:20090211")
 
-    // Spark core + SQL
-    implementation 'org.apache.spark:spark-sql_2.12:3.4.1'
+    // === Flink 1.20.1 ===
+    implementation('org.apache.flink:flink-streaming-java:1.20.1') {
+        exclude group: 'org.slf4j', module: 'slf4j-reload4j'
+    }
+    implementation('org.apache.flink:flink-table-api-java-bridge:1.20.1') {
+        exclude group: 'org.slf4j', module: 'slf4j-reload4j'
+    }
+    implementation('org.apache.flink:flink-table-common:1.20.1') {
+        exclude group: 'org.slf4j', module: 'slf4j-reload4j'
+    }
+    implementation('org.apache.flink:flink-table-runtime:1.20.1') {
+        exclude group: 'org.slf4j', module: 'slf4j-reload4j'
+    }
+    implementation('org.apache.flink:flink-table-planner-loader:1.20.1') {
+        exclude group: 'org.slf4j', module: 'slf4j-reload4j'
+    }
 
+    // === Iceberg 1.9.1 ===
+    implementation('org.apache.iceberg:iceberg-core:1.9.1')
+    implementation('org.apache.iceberg:iceberg-aws:1.9.1')
 
+    // === Hadoop & S3 Support ===
+    // https://mvnrepository.com/artifact/org.apache.hadoop/hadoop-common
+    implementation ('org.apache.hadoop:hadoop-common:3.4.1')
 
-    // https://mvnrepository.com/artifact/org.apache.iceberg/iceberg-spark-runtime-3.4
-    implementation("org.apache.iceberg:iceberg-spark-runtime-3.4_2.13:1.9.0")
-    // Iceberg hỗ trợ AWS S3
-    implementation "org.apache.iceberg:iceberg-aws:1.2.0"
+    // https://mvnrepository.com/artifact/org.apache.iceberg/iceberg-flink-runtime
+    implementation("org.apache.iceberg:iceberg-flink-runtime:0.12.1")
 
-    // AWS SDK v2 (đảm bảo có đủ các thư viện cần thiết)
-    implementation 'software.amazon.awssdk:s3:2.31.50'
-    implementation "software.amazon.awssdk:auth:2.31.50"
-    implementation "software.amazon.awssdk:core:2.31.50"
+    // Nếu đang dùng Flink, tránh dùng slf4j-reload4j
+    configurations.all {
+        exclude group: 'org.slf4j', module: 'slf4j-reload4j'
+    }
 
+//    // Spark core + SQL
+//    implementation 'org.apache.spark:spark-sql_2.12:3.4.1'
+//
+//
+//
+//    // https://mvnrepository.com/artifact/org.apache.iceberg/iceberg-spark-runtime-3.4
+//    implementation("org.apache.iceberg:iceberg-spark-runtime-3.4_2.13:1.9.0")
+//    // Iceberg hỗ trợ AWS S3
+//    implementation "org.apache.iceberg:iceberg-aws:1.2.0"
+//
+//    // AWS SDK v2 (đảm bảo có đủ các thư viện cần thiết)
+//    implementation 'software.amazon.awssdk:s3:2.31.50'
+//    implementation "software.amazon.awssdk:auth:2.31.50"
+//    implementation "software.amazon.awssdk:core:2.31.50"
+//// https://mvnrepository.com/artifact/software.amazon.awssdk/sts
+//    implementation("software.amazon.awssdk:sts:2.31.50")
+//// https://mvnrepository.com/artifact/software.amazon.awssdk/dynamodb
+//    implementation("software.amazon.awssdk:dynamodb:2.31.50")
+//    // https://mvnrepository.com/artifact/software.amazon.awssdk/kms
+//    implementation("software.amazon.awssdk:kms:2.31.50")
+//    // https://mvnrepository.com/artifact/software.amazon.awssdk/glue
+//    implementation("software.amazon.awssdk:glue:2.31.50")
 
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.0'
     implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.2'
@@ -62,9 +100,6 @@ dependencies {
     // https://mvnrepository.com/artifact/com.fasterxml.jackson.dataformat/jackson-dataformat-xml
     implementation("com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.19.0")
 
-    // Iceberg (dùng core hoặc Spark integration nếu cần)
-    implementation 'org.apache.iceberg:iceberg-core:1.5.0'
-    implementation 'org.apache.iceberg:iceberg-parquet:1.5.0'
 
 
     implementation 'javax.servlet:javax.servlet-api:4.0.1'
@@ -80,7 +115,6 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
 }
-
 
 bootRun {
     jvmArgs = [
