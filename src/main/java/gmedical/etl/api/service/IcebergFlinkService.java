@@ -6,11 +6,6 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import org.apache.flink.table.api.EnvironmentSettings;
 
-import org.apache.flink.table.api.TableEnvironment;
-
-
-import java.util.HashMap;
-import java.util.Map;
 
 import org.apache.flink.table.api.bridge.java.StreamTableEnvironment;
 import org.springframework.stereotype.Service;
@@ -20,54 +15,65 @@ public class IcebergFlinkService {
 
 
     public void writeSampleData() throws Exception {
-        Configuration config = new Configuration();
-        config.setString("fs.s3a.access.key", "qHdHtnT6nwZqFydGe89l");
-        config.setString("fs.s3a.secret.key", "mYS5VJi5sr2Kx9o7lRnMmnxTQDLsJR6lppfoteef");
-        config.setString("fs.s3a.endpoint", "http://10.6.8.29:9100");
-        config.setString("fs.s3a.path.style.access", "true");
-        config.setString("fs.s3a.connection.ssl.enabled", "false");
+        // Load Hadoop configuration for S3A (MinIO)
+        Configuration hadoopConf = new Configuration();
+        hadoopConf.setString("fs.s3a.access.key", "qHdHtnT6nwZqFydGe89l");
+        hadoopConf.setString("fs.s3a.secret.key", "mYS5VJi5sr2Kx9o7lRnMmnxTQDLsJR6lppfoteef");
+        hadoopConf.setString("fs.s3a.endpoint", "http://10.6.8.29:9100");
+        hadoopConf.setBoolean("fs.s3a.path.style.access", true);
+        hadoopConf.setBoolean("fs.s3a.connection.ssl.enabled", false);
 
-        // set up the execution environment
-        final StreamExecutionEnvironment env =
-                StreamExecutionEnvironment.getExecutionEnvironment();
-        // set up the table environment
-        final StreamTableEnvironment tableEnv = StreamTableEnvironment.create(
-                env,
-                EnvironmentSettings.newInstance().inStreamingMode().build());
+        // Create StreamExecutionEnvironment with Hadoop configuration
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+        env.getConfig().setGlobalJobParameters(new org.apache.flink.configuration.Configuration());
 
+        // Create TableEnvironment in streaming mode
+        EnvironmentSettings settings = EnvironmentSettings.newInstance()
+                .inStreamingMode()
+                .build();
+        final StreamTableEnvironment tableEnv = StreamTableEnvironment.create(env, settings);
 
-        // Register Iceberg REST catalog
-        Map<String, String> icebergConfig = new HashMap<>();
-        icebergConfig.put("type", "iceberg");
-        icebergConfig.put("catalog-type", "rest");
-        icebergConfig.put("uri", "http://10.6.8.29:8181");
-        icebergConfig.put("warehouse", "s3://iceberg-warehouse");
-        icebergConfig.put("property-version", "1");
+        // Add Hadoop configuration to TableEnvironment
+        tableEnv.getConfig().getConfiguration().addAll(hadoopConf);
 
-        tableEnv.executeSql("CREATE CATALOG iceberg WITH ("
-                + "'type'='iceberg',"
-                + "'catalog-impl'='org.apache.iceberg.nessie.NessieCatalog',"
-                + "'io-impl'='org.apache.iceberg.aws.s3.S3FileIO',"
-                + "'uri'='http://10.6.8.29:8181/',"
-                + "'authentication.type'='none',"
-                + "'ref'='main',"
-                + "'client.assume-role.region'='us-east-1',"
-                + "'warehouse' = 's3://iceberg-warehouse',"
-                + "'s3.endpoint'='http://10.6.8.29:9100'"
-                + ")");
+        try {
+            // Create Iceberg catalog using REST Catalog
+            tableEnv.executeSql(
+                    "CREATE CATALOG iceberg WITH (" +
+                            "'type'='iceberg'," +
+                            "'catalog-type'='rest'," +
+                            "'uri'='http://10.6.8.29:8181'," +
+                            "'warehouse'='s3://iceberg-warehouse'," +
+                            "'s3.endpoint'='http://10.6.8.29:9100'," +
+                            "'s3.path.style.access'='true'," +
+                            "'authentication.type'='none'" +
+                            ")"
+            );
 
-        tableEnv.useCatalog("iceberg");
+            // Use the created catalog
+            tableEnv.useCatalog("iceberg");
 
-        // Optional: if you already have a table in Iceberg, skip this CREATE TABLE step
-        tableEnv.executeSql("CREATE TABLE IF NOT EXISTS sample_table (id INT, name STRING) WITH ('format-version'='2', 'write.format.default'='parquet')");
+            // Create Iceberg table
+            tableEnv.executeSql(
+                    "CREATE TABLE IF NOT EXISTS dbtest.`table-test6` (" +
+                            "id INT, " +
+                            "name STRING" +
+                            ") WITH (" +
+                            "'format-version' = '1', " +
+                            "'write.format.default' = 'parquet'" +
+                            ")"
+            );
 
-        // Create a temporary table with inline values
-        tableEnv.executeSql("CREATE TEMPORARY TABLE input_data (id INT, name STRING) WITH ('connector'='values')");
+            // Insert sample data into the table
+            tableEnv.executeSql(
+                    "INSERT INTO dbtest.`table-test6` VALUES (1, 'Alice'), (2, 'Bob'), (3, 'Charlie')"
+            );
 
-        tableEnv.executeSql("INSERT INTO input_data VALUES (1, 'Alice'), (2, 'Bob'), (3, 'Charlie')");
-
-        // Insert into Iceberg table
-        tableEnv.executeSql("INSERT INTO sample_table SELECT * FROM input_data");
-
+            // Execute the Flink job
+            env.execute("Iceberg Sample Data Write");
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Error executing Iceberg operations", e);
+        }
     }
 }
